@@ -1,0 +1,13 @@
+SpeechRecognition
+pyaudio
+sounddevice
+librosa
+numpy
+mediapipe
+opencv-python
+scikit-learn
+edge-tts
+pygame
+streamlit
+google-genai
+python-dotenv
