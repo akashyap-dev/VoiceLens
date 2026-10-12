@@ -73,8 +73,8 @@ def train():
     with open(LABELS_PATH, "w") as f:
         json.dump(labels, f, indent=2)
 
-    print(f"✅ Model saved to: {MODEL_PATH}")
-    print(f"✅ Labels saved to: {LABELS_PATH}")
+    print(f"[OK] Model saved to: {MODEL_PATH}")
+    print(f"[OK] Labels saved to: {LABELS_PATH}")
     print("========================================")
     print("Your local model is ready! hand_tracker.py will now use it automatically.")
 

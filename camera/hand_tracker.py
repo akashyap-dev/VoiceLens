@@ -116,7 +116,7 @@ def translate_sign(feature_frames):
             
             if confidence >= 0.50:
                 translation = local_model.classes_[best_idx]
-                print(f"[LOCAL MODEL ⚡] Detected: '{translation}' (Confidence: {confidence * 100:.1f}%)")
+                print(f"[LOCAL MODEL - INSTANT] Detected: '{translation}' (Confidence: {confidence * 100:.1f}%)")
             else:
                 print(f"[LOCAL MODEL] Low confidence ({confidence * 100:.1f}%). Passing to fallback/Gemini...")
                 translation = "Uncertain Sign"
