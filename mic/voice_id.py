@@ -1,39 +1,52 @@
 # mic/voice_id.py
 # This file figures out WHO is talking by comparing how their voice sounds.
-# It creates a unique voice fingerprint for each person.
+# It creates a unique voice fingerprint for each person and loads pre-registered names.
 import numpy as np
 import librosa
+import json
+import os
 
-SPEAKER_COLORS = ["#4A90D9", "#4CAF50", "#FF9800", "#E91E63", "#9C27B0"]
+SPEAKER_COLORS = ["#4A90D9", "#4CAF50", "#FF9800", "#E91E63", "#9C27B0", "#00BCD4"]
 
 class VoiceID:
     def __init__(self, similarity_threshold=0.82):
-        # Stores voice fingerprints for each speaker
+        # Stores voice fingerprints for each speaker id
         self.speaker_profiles = {}
+        # Stores the names for each speaker id (e.g. 1: "Rahul")
+        self.speaker_names = {}
         self.similarity_threshold = similarity_threshold
         self.next_speaker_id = 1
+        
+        # Look for the saved voices file
+        self.profiles_file = os.path.join(os.path.dirname(__file__), "profiles.json")
+        self.load_profiles()
+
+    def load_profiles(self):
+        """Loads pre-registered voice profiles from the JSON file."""
+        if os.path.exists(self.profiles_file):
+            with open(self.profiles_file, 'r') as f:
+                data = json.load(f)
+                for name, fingerprint in data.items():
+                    self.speaker_profiles[self.next_speaker_id] = [np.array(fingerprint)]
+                    self.speaker_names[self.next_speaker_id] = name
+                    self.next_speaker_id += 1
+            print(f"[VOICE ID] Loaded {len(data)} pre-registered voices from profiles.json")
 
     def extract_voice_fingerprint(self, audio_data):
         """Creates a unique voice fingerprint from the recorded sound."""
-        # Convert the audio into a list of sound numbers
         raw_bytes = audio_data.get_raw_data(convert_rate=16000, convert_width=2)
         samples = np.frombuffer(raw_bytes, dtype=np.int16).astype(np.float32) / 32768.0
 
-        if len(samples) < 1600:  # Need at least 0.1 seconds of audio
+        if len(samples) < 1600:
             return None
 
-        # Calculate sound features to build a voice fingerprint
         mfcc = librosa.feature.mfcc(y=samples, sr=16000, n_mfcc=20)
-        # Average the features over time to make a single voice profile.
-        # Skip the first value because it only tracks volume, not how the voice sounds!
         fingerprint = np.mean(mfcc[1:], axis=1)
 
-        # Center and scale the numbers so they are easy to compare
         std_val = np.std(fingerprint)
         if std_val > 1e-6:
             fingerprint = (fingerprint - np.mean(fingerprint)) / std_val
 
-        # Scale the fingerprint to a standard length
         norm = np.linalg.norm(fingerprint)
         if norm > 1e-6:
             fingerprint = fingerprint / norm
@@ -47,19 +60,21 @@ class VoiceID:
         """
         fingerprint = self.extract_voice_fingerprint(audio_data)
 
-        # Fallback if audio is too short
         if fingerprint is None:
-            return 1, "Speaker 1", SPEAKER_COLORS[0], 1.0
+            name = self.speaker_names.get(1, "Guest 1")
+            return 1, name, SPEAKER_COLORS[0], 1.0
 
-        # Register the very first speaker
+        # If no profiles exist at all, register the first guest
         if not self.speaker_profiles:
             self.speaker_profiles[1] = [fingerprint]
-            return 1, "Speaker 1", SPEAKER_COLORS[0], 1.0
+            self.speaker_names[1] = "Guest 1"
+            self.next_speaker_id = 2
+            return 1, "Guest 1", SPEAKER_COLORS[0], 1.0
 
         best_speaker_id = None
         highest_similarity = -1.0
 
-        # Compare with each known speaker to see how similar the voices sound
+        # Compare with each known speaker
         for spk_id, saved_fingerprints in self.speaker_profiles.items():
             sims = [float(np.dot(fingerprint, saved)) for saved in saved_fingerprints]
             avg_sim = np.mean(sims)
@@ -68,29 +83,29 @@ class VoiceID:
                 highest_similarity = avg_sim
                 best_speaker_id = spk_id
 
-        # If similarity is high enough, we found a match!
+        # If it matches someone (pre-registered or a previous guest)
         if highest_similarity >= self.similarity_threshold:
-            # Save this new sample to make future matching better (keep last 5)
+            # Keep their profile updated with their latest voice
             self.speaker_profiles[best_speaker_id].append(fingerprint)
             if len(self.speaker_profiles[best_speaker_id]) > 5:
                 self.speaker_profiles[best_speaker_id].pop(0)
 
             color = SPEAKER_COLORS[(best_speaker_id - 1) % len(SPEAKER_COLORS)]
-            print(f"[DEBUG] Matched Speaker {best_speaker_id} (similarity: {highest_similarity:.3f})")
-            return best_speaker_id, f"Speaker {best_speaker_id}", color, round(highest_similarity, 2)
+            name = self.speaker_names[best_speaker_id]
+            print(f"[DEBUG] Matched {name} (similarity: {highest_similarity:.3f})")
+            return best_speaker_id, name, color, round(highest_similarity, 2)
 
-        # Otherwise, a NEW speaker has spoken!
-        if len(self.speaker_profiles) < len(SPEAKER_COLORS):
-            self.next_speaker_id += 1
-            new_id = self.next_speaker_id
-            self.speaker_profiles[new_id] = [fingerprint]
-            color = SPEAKER_COLORS[(new_id - 1) % len(SPEAKER_COLORS)]
-            print(f"[DEBUG] New voice detected! Registered as Speaker {new_id}")
-            return new_id, f"Speaker {new_id}", color, 1.0
-        else:
-            # Max speakers reached, pick the closest match
-            color = SPEAKER_COLORS[(best_speaker_id - 1) % len(SPEAKER_COLORS)]
-            return best_speaker_id, f"Speaker {best_speaker_id}", color, round(highest_similarity, 2)
+        # NEW SPEAKER DETECTED (Not registered, hasn't spoken yet today)
+        new_id = self.next_speaker_id
+        self.next_speaker_id += 1
+        
+        self.speaker_profiles[new_id] = [fingerprint]
+        guest_name = f"Guest {new_id}"
+        self.speaker_names[new_id] = guest_name
+        
+        color = SPEAKER_COLORS[(new_id - 1) % len(SPEAKER_COLORS)]
+        print(f"[DEBUG] New voice detected! Registered as {guest_name}")
+        return new_id, guest_name, color, 1.0
 
 if __name__ == "__main__":
     tracker = VoiceID()
