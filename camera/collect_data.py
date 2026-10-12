@@ -1,41 +1,46 @@
 # camera/collect_data.py
-# Tool to collect training samples for the Top 5 ASL signs in 1st-Person POV.
-# Run this script to record your hand positions for:
-# 1. HELLO  2. THANK YOU  3. YES  4. NO  5. HELP
+# Tool to collect training samples for the High-Frequency ASL signs in 1st-Person POV.
+# Suppresses TensorFlow/MediaPipe C++ stderr noise so the menu is clean.
 
-import cv2
-import mediapipe as mp
-import numpy as np
-import json
 import os
+import sys
+
+# Silence TensorFlow / MediaPipe background terminal logs
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
+os.environ['GLOG_minloglevel'] = '3'
+import warnings
+warnings.filterwarnings("ignore")
+
+import json
 import time
+import numpy as np
 
-DATA_DIR = os.path.join(os.path.dirname(__file__), "data")
-os.makedirs(DATA_DIR, exist_ok=True)
-DATASET_PATH = os.path.join(DATA_DIR, "asl_dataset.json")
-
+# All 15 High-Frequency ASL Signs
 SIGNS_LIST = [
     "HELLO",
     "THANK YOU",
     "YES",
     "NO",
-    "HELP"
+    "HELP",
+    "PLEASE",
+    "MORE",
+    "STOP",
+    "WATER",
+    "EAT / FOOD",
+    "SORRY",
+    "I / ME",
+    "YOU",
+    "WANT",
+    "FRIEND"
 ]
 
-mp_hands = mp.solutions.hands
-mp_drawing = mp.solutions.drawing_utils
-mp_drawing_styles = mp.solutions.drawing_styles
-
-hands = mp_hands.Hands(
-    max_num_hands=2,
-    min_detection_confidence=0.5,
-    min_tracking_confidence=0.5
-)
+DATA_DIR = os.path.join(os.path.dirname(__file__), "data")
+os.makedirs(DATA_DIR, exist_ok=True)
+DATASET_PATH = os.path.join(DATA_DIR, "asl_dataset.json")
 
 def extract_features(results):
     """
-    Extracts 126 numbers (63 for Left Hand + 63 for Right Hand).
-    Each hand gets 21 landmarks * 3 coordinates (x, y, z),
+    Extracts 126 numbers (63 for Left Hand + 63 for Right Hand),
     normalized relative to the wrist so distance from camera doesn't matter!
     """
     left_hand = np.zeros(63)
@@ -45,14 +50,13 @@ def extract_features(results):
         return None
         
     for idx, hand_lms in enumerate(results.multi_hand_landmarks):
-        label = "Right"  # default
+        label = "Right"
         if results.multi_handedness and idx < len(results.multi_handedness):
             label = results.multi_handedness[idx].classification[0].label
             
         wrist = hand_lms.landmark[0]
         coords = []
         for lm in hand_lms.landmark:
-            # Normalize relative to wrist (landmark 0)
             coords.extend([lm.x - wrist.x, lm.y - wrist.y, lm.z - wrist.z])
             
         coords = np.array(coords)
@@ -67,36 +71,67 @@ def main():
     print("========================================")
     print("    VOICELENS ASL DATA COLLECTOR        ")
     print("========================================")
-    print("Select a sign to record training samples:")
+    print("Select a sign to record training samples:\n")
     for idx, sign in enumerate(SIGNS_LIST, 1):
-        print(f"  {idx}. {sign}")
+        print(f"  {idx:2d}. {sign}")
     print("========================================")
-    
-    try:
-        choice = int(input("Enter number (1-5): ").strip())
-        if choice < 1 or choice > len(SIGNS_LIST):
-            print("Invalid choice.")
+
+    # Clean input loop with retry if invalid
+    selected_sign = None
+    while not selected_sign:
+        try:
+            user_input = input(f"Enter number (1-{len(SIGNS_LIST)}) or sign name: ").strip()
+            if not user_input:
+                continue
+            if user_input.isdigit():
+                choice = int(user_input)
+                if 1 <= choice <= len(SIGNS_LIST):
+                    selected_sign = SIGNS_LIST[choice - 1]
+                else:
+                    print(f"Please enter a number between 1 and {len(SIGNS_LIST)}.")
+            else:
+                match = [s for s in SIGNS_LIST if s.lower() == user_input.lower()]
+                if match:
+                    selected_sign = match[0]
+                else:
+                    print("Sign not found in list. Please try again.")
+        except (KeyboardInterrupt, EOFError):
+            print("\nExiting.")
             return
-        selected_sign = SIGNS_LIST[choice - 1]
-    except Exception:
-        print("Invalid input.")
-        return
+
+    # Load MediaPipe ONLY after user chooses sign (prevents stdout/stderr flood during input)
+    print("\nInitializing camera and hand tracking...")
+    import cv2
+    import mediapipe as mp
+
+    mp_hands = mp.solutions.hands
+    mp_drawing = mp.solutions.drawing_utils
+    mp_drawing_styles = mp.solutions.drawing_styles
+
+    hands = mp_hands.Hands(
+        max_num_hands=2,
+        min_detection_confidence=0.5,
+        min_tracking_confidence=0.5
+    )
 
     # Load existing dataset if present
     dataset = {}
     if os.path.exists(DATASET_PATH):
-        with open(DATASET_PATH, "r") as f:
-            dataset = json.load(f)
+        try:
+            with open(DATASET_PATH, "r") as f:
+                dataset = json.load(f)
+        except Exception:
+            dataset = {}
             
     if selected_sign not in dataset:
         dataset[selected_sign] = []
 
-    print(f"\nTarget Sign: {selected_sign}")
-    print(f"Currently saved samples for {selected_sign}: {len(dataset[selected_sign])}")
+    print(f"\n[READY] Recording for: '{selected_sign}'")
+    print(f"Previously saved samples for this sign: {len(dataset[selected_sign])}")
     print("\nHow to record:")
-    print("  - Place both hands in POV view (chest/glasses perspective).")
-    print("  - Press 'r' in the camera window to record 30 frames.")
-    print("  - Press 'q' to finish and save.")
+    print("  1. Position your hands in the camera view (POV perspective).")
+    print("  2. Press 'r' to record 30 frames.")
+    print("  3. Press 'q' to save and exit.")
 
     cap = cv2.VideoCapture(0)
     cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
@@ -126,7 +161,7 @@ def main():
                     mp_drawing_styles.get_default_hand_connections_style()
                 )
 
-        # Recording status overlay
+        # Recording logic
         if recording:
             features = extract_features(results)
             if features is not None:
@@ -139,7 +174,7 @@ def main():
             if samples_this_round >= TARGET_SAMPLES:
                 recording = False
                 samples_this_round = 0
-                print(f"\n[DONE] Captured {TARGET_SAMPLES} samples! Total for {selected_sign}: {len(dataset[selected_sign])}")
+                print(f"\n✅ Captured {TARGET_SAMPLES} samples! Total for {selected_sign}: {len(dataset[selected_sign])}")
         else:
             cv2.putText(frame, f"Sign: {selected_sign} | Total Saved: {len(dataset[selected_sign])}",
                         (30, 50), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 255, 0), 2)
@@ -152,7 +187,7 @@ def main():
         if key == ord('r') and not recording:
             recording = True
             samples_this_round = 0
-            print(f"\nStarting recording for '{selected_sign}'...")
+            print(f"\nRecording {TARGET_SAMPLES} samples for '{selected_sign}'...")
         elif key == ord('q'):
             break
 
