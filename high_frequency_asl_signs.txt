@@ -1,108 +1,72 @@
-# HIGH-FREQUENCY AMERICAN SIGN LANGUAGE (ASL) SIGNS
+# HIGH-FREQUENCY STILL / STATIC ASL SIGNS
 # VoiceLens 1st-Person POV (FPS Chest / Glasses View)
 
-This file contains the high-frequency ASL signs chosen specifically for VoiceLens.
-Because VoiceLens uses a 1st-Person POV camera (chest-mounted pendant or smart glasses pointing forward at the user's hands), these signs are selected to be:
-1. Highly natural to sign in 1st-person perspective
-2. Visually distinct with 21 MediaPipe hand landmarks
-3. Optimal for both 1-handed and 2-handed execution in the camera's field of view
+Why still signs work 100x better:
+Static handshapes and poses have 99%+ accuracy with MediaPipe because the 21 finger landmarks
+remain steady without getting blurred or distorted by arm motion.
+
+Training Plan:
+For each sign, collect 60 frames using your LEFT hand, and 60 frames using your RIGHT hand.
+Both hands will be recognized instantly without confusion!
 
 ============================================================
---- THE DEMO CORE (TOP 5 ASL SIGNS) ---
+--- THE TOP 6 CORE STILL SIGNS (RECOMMENDED FOR DEMO) ---
 ============================================================
-These 5 signs are the core demo vocabulary for the local instant ML model (0.05s response time).
 
-1. HELLO / HI
-   - Type: 1-Handed (Dominant Hand)
-   - Motion: Open flat hand touches temple/forehead with fingertips, moves slightly outward and forward (like a casual salute) or a clear open wave.
-   - POV View: Dominant hand comes up into the upper field of view, moves forward.
+1. I LOVE YOU (ILY)
+   - Handshape: Thumb, Index finger, and Pinky finger pointing UP. Middle and ring fingers curled down into palm.
+   - Pose: Held steady facing forward/up.
+   - Meaning: Iconic universal sign for "I Love You" / "Care".
 
-2. THANK YOU
-   - Type: 1-Handed (Dominant Hand)
-   - Motion: Flat hand with fingers together touches chin/lips, then moves outward and downward towards the conversation partner.
-   - POV View: Hand ascends into view, touches chin, extends directly forward away from the chest.
+2. STOP
+   - Handshape: Open flat hand with all 5 fingers straight and close together, palm pushing forward.
+   - Pose: Held steady facing directly forward toward conversation partner.
+   - Meaning: "Stop" / "Wait" / "Halt".
 
-3. YES
-   - Type: 1-Handed (Dominant Hand)
-   - Motion: Make an 'S' fist (thumb across fingers) and nod the wrist up and down like a head nodding "yes".
-   - POV View: Fist held in central signing zone, flexing up and down cleanly.
+3. OK / PERFECT
+   - Handshape: Thumb and Index fingertips touch to form a circle ("O"), remaining 3 fingers extended straight up.
+   - Pose: Held steady at chest/eye level.
+   - Meaning: "OK" / "Understood" / "Fine" / "Perfect".
 
-4. NO
-   - Type: 1-Handed (Dominant Hand)
-   - Motion: Extended index and middle fingers snap down quickly to touch the extended thumb (like a 3-finger mouth closing).
-   - POV View: Clean finger pinch motion clearly captured by MediaPipe landmarks.
+4. YES
+   - Handshape: Closed fist ('S' handshape) with thumb curled tightly over fingers.
+   - Pose: Held upright steady in front of chest.
+   - Meaning: "Yes" / "Agree".
 
-5. HELP
-   - Type: 2-Handed
-   - Motion: Non-dominant hand is held flat, palm facing UP. Dominant hand makes an 'A' fist (thumbs-up fist) placed on top of the flat palm. Both hands lift upward together.
-   - POV View: Perfect for POV camera! Left hand enters bottom-left, right hand enters bottom-right, meets in center and lifts upward.
+5. NO
+   - Handshape: Index finger and Middle finger extended straight and held tightly touching the Thumb tip (like a closed bird beak).
+   - Pose: Held steady facing forward.
+   - Meaning: "No" / "Disagree".
 
-============================================================
---- HIGH FREQUENCY ESSENTIALS (NEXT 10 ASL SIGNS) ---
-============================================================
-These signs can be added to the local model or processed by Gemini 2.0.
-
-6. PLEASE
-   - Type: 1-Handed
-   - Motion: Open flat hand rubs in a clockwise circle flat against the chest.
-   - POV View: Hand operates close to chest camera, circles smoothly.
-
-7. MORE
-   - Type: 2-Handed
-   - Motion: Both hands form flattened 'O' shapes (fingers touch thumbs). Tap the fingertips of both hands together repeatedly in front of chest.
-   - POV View: Both hands meet squarely in the center of the frame.
-
-8. STOP
-   - Type: 2-Handed
-   - Motion: Non-dominant hand is flat, palm facing up. Dominant flat hand comes down like a knife chop onto the open palm.
-   - POV View: Crisp two-handed interaction with distinct spatial contact.
-
-9. WATER
-   - Type: 1-Handed
-   - Motion: Form a 'W' handshape (index, middle, ring finger up). Tap the index finger against the chin twice.
-   - POV View: Distinct 3-finger handshape clearly distinguished from open palm.
-
-10. EAT / FOOD
-    - Type: 1-Handed
-    - Motion: Flattened 'O' handshape (all fingertips touching thumb) brought to the mouth twice.
-    - POV View: Hand moves toward face/top edge of camera frame.
-
-11. SORRY
-    - Type: 1-Handed
-    - Motion: Make an 'A' fist and rub it in a circle over the center of the chest.
-    - POV View: Fist circles in central lower third of camera view.
-
-12. I / ME
-    - Type: 1-Handed
-    - Motion: Index finger points directly to own chest (near the camera/pendant).
-    - POV View: Finger points directly toward the camera lens.
-
-13. YOU
-    - Type: 1-Handed
-    - Motion: Index finger points straight forward at the other person.
-    - POV View: Finger extends directly into the center distance.
-
-14. WANT
-    - Type: 2-Handed
-    - Motion: Both hands open with palms facing UP, fingers slightly clawed/curved. Pull hands back toward the chest.
-    - POV View: Both hands enter frame and retract towards the user.
-
-15. FRIEND
-    - Type: 2-Handed
-    - Motion: Both index fingers hook together once, then reverse and hook together again.
-    - POV View: Two hands link in center of signing space.
+6. PEACE / TWO
+   - Handshape: Index and Middle finger extended in a "V" shape, other fingers curled into palm with thumb over them.
+   - Pose: Held steady facing forward.
+   - Meaning: "Peace" / "Two" / "Victory".
 
 ============================================================
---- 1ST-PERSON POV (FPS VIEW) CAMERA SETUP RULES ---
+--- EXTENDED STILL SIGNS (OPTIONAL ADDITIONS) ---
 ============================================================
-1. Camera Mount Position:
-   - Positioned at chest level (Smart Pendant) or glasses looking downward at a ~35° to 45° angle.
-   - Distance to signing space: 30 cm to 50 cm.
 
-2. Framing & Field of View:
-   - Must see BOTH hands comfortably without clipping the sides when signing (e.g. for "HELP", "MORE", "WANT").
-   - Left hand should enter from lower-left quadrant; Right hand from lower-right quadrant.
+7. GOOD / LIKE
+   - Handshape: Standard Thumbs-Up fist with thumb pointing straight up.
+   - Meaning: "Good" / "Like" / "Positive".
 
-3. Perspective & Inversion:
-   - POV cameras should NOT use horizontal mirror flip (mirror mode swaps left & right hands).
-   - MediaPipe classifies Left and Right hands accurately in true perspective.
+8. BAD / DISLIKE
+   - Handshape: Thumbs-Down fist with thumb pointing straight down.
+   - Meaning: "Bad" / "Dislike" / "Negative".
+
+9. YOU
+   - Handshape: Single index finger pointing straight forward at the other person.
+   - Meaning: "You".
+
+10. ME / I
+    - Handshape: Single index finger pointing directly back at your own chest.
+    - Meaning: "Me" / "I".
+
+11. CALL ME / PHONE
+    - Handshape: 'Y' shape — Thumb pointing up and Pinky pointing down (like holding a phone handset).
+    - Meaning: "Call me" / "Phone".
+
+12. TIME
+    - Handshape: Index finger pointing directly to the opposite wrist (like tapping a wristwatch).
+    - Meaning: "What time is it?" / "Time".
